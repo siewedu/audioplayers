@@ -230,7 +230,7 @@ public class SwiftAudioplayersPlugin: NSObject, FlutterPlugin {
                 result(0)
                 return
             }
-            let looping = releaseMode.hasSuffix("LOOP")
+            let looping = releaseMode.hasSuffix("loop")
             player.looping = looping
         } else if method == "earpieceOrSpeakersToggle" {
             guard let playingRoute = args["playingRoute"] as? String else {
@@ -338,7 +338,8 @@ public class SwiftAudioplayersPlugin: NSObject, FlutterPlugin {
         recordingActive: Bool,
         isNotification: Bool,
         playingRoute: String,
-        duckAudio: Bool
+        duckAudio: Bool,
+        enableHapticFeedback: Bool = true
     ) {
         #if os(iOS)
         // When using AVAudioSessionCategoryPlayback, by default, this implies that your app’s audio is nonmixable—activating your session
@@ -347,9 +348,8 @@ public class SwiftAudioplayersPlugin: NSObject, FlutterPlugin {
         let category = (playingRoute == "earpiece" || recordingActive) ? AVAudioSession.Category.playAndRecord : (
             isNotification ? AVAudioSession.Category.ambient : AVAudioSession.Category.playback
         )
-        let options = isNotification || duckAudio ? AVAudioSession.CategoryOptions.mixWithOthers : []
-        
-        configureAudioSession(category: category, options: options)
+        let options: AVAudioSession.CategoryOptions = isNotification || duckAudio ? [AVAudioSession.CategoryOptions.mixWithOthers, AVAudioSession.CategoryOptions.allowBluetoothA2DP] : []
+        configureAudioSession(category: category, options: options, enableHapticFeedback: enableHapticFeedback)
         if isNotification {
             UIApplication.shared.beginReceivingRemoteControlEvents()
         }
@@ -392,10 +392,12 @@ public class SwiftAudioplayersPlugin: NSObject, FlutterPlugin {
     private func configureAudioSession(
         category: AVAudioSession.Category? = nil,
         options: AVAudioSession.CategoryOptions = [],
+        enableHapticFeedback: Bool = false,
         active: Bool? = nil
     ) {
         do {
             let session = AVAudioSession.sharedInstance()
+            try session.setAllowHapticsAndSystemSoundsDuringRecording(enableHapticFeedback)
             if let category = category {
                 try session.setCategory(category, options: options)
             }

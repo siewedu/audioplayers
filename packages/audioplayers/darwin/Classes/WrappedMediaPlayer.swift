@@ -292,13 +292,15 @@ class WrappedMediaPlayer {
         time: CMTime?,
         isNotification: Bool,
         recordingActive: Bool,
-        duckAudio: Bool
+        duckAudio: Bool,
+        allowHapticFeedback: Bool = true
     ) {
         reference.updateCategory(
             recordingActive: recordingActive,
             isNotification: isNotification,
             playingRoute: playingRoute,
-            duckAudio: duckAudio
+            duckAudio: duckAudio,
+            enableHapticFeedback: allowHapticFeedback
         )
         
         setUrl(
